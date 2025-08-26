@@ -1,0 +1,122 @@
+@model MarkovWebApp.Models.GenerateViewModel
+@{
+    ViewData["Title"] = "Generate Story";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Story Generator</h1>
+    <p>Start with a word or two, and let the trained brain continue the story based on what it has learned.</p>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8 offset-md-2">
+        @* Formu artık bir ID ile tanımlıyoruz, post etmesini engelleyeceğiz *@
+        <form id="generateForm">
+            <div class="form-group">
+                <label for="seedPhraseInput" class="form-label"><h3>Starting Phrase</h3></label>
+                <input id="seedPhraseInput" class="form-control form-control-lg" placeholder="e.g., The old house..." />
+                <span class="text-danger" id="errorSpan"></span>
+            </div>
+            <div class="row mt-4 align-items-end">
+    
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label for="lengthInput" class="form-label d-flex justify-content-between">
+                            <h5>Text Length (words)</h5>
+                            <span id="lengthValue" class="fw-bold">100</span>
+                        </label>
+                        <input id="lengthInput" type="range" class="form-range" value="100" min="10" max="500" step="10">
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <div class="d-grid">
+                            <button type="submit" id="generateButton" class="btn btn-success btn-lg">Generate Story</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+        <div class="mt-5">
+            <h3>Generated Story:</h3>
+            @* Sonucun gösterileceği alanı bir ID ile tanımlıyoruz *@
+            <div id="storyResult" class="p-4 bg-light border rounded" style="white-space: pre-wrap; min-height: 150px; font-family: 'Courier New', Courier, monospace;"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* SignalR client kütüphanesini ekliyoruz *@
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/generatorHub")
+                .build();
+
+            const generateButton = document.getElementById("generateButton");
+            const seedPhraseInput = document.getElementById("seedPhraseInput");
+            const storyResultDiv = document.getElementById("storyResult");
+            const errorSpan = document.getElementById("errorSpan");
+            const lengthInput = document.getElementById("lengthInput");
+            const lengthValue = document.getElementById("lengthValue");
+
+            // Slider her hareket ettiğinde, yandaki sayı göstergesini güncelle.
+            lengthInput.addEventListener('input', (event) => {
+                lengthValue.textContent = event.target.value;
+            });
+
+            // Hub'dan "ReceiveWord" mesajı geldiğinde çalışacak fonksiyon
+            connection.on("ReceiveWord", function (word) {
+                storyResultDiv.textContent += word;
+            });
+
+            // Hub, akışın bittiğini söylediğinde çalışacak fonksiyon
+            connection.on("StreamFinished", function () {
+                generateButton.disabled = false;
+                generateButton.textContent = "Generate Story";
+            });
+
+            // Butona tıklandığında formun post edilmesini engelle ve Hub'ı çağır
+            document.getElementById("generateForm").addEventListener("submit", function (event) {
+                event.preventDefault();
+                const seedPhrase = seedPhraseInput.value;
+                
+                if (!seedPhrase) {
+                    errorSpan.textContent = "Please provide a starting phrase.";
+                    return;
+                }
+
+                errorSpan.textContent = "";
+                storyResultDiv.textContent = ""; // Önceki sonucu temizle
+                generateButton.disabled = true;
+                generateButton.textContent = "Generating...";
+
+                const length = parseInt(lengthInput.value, 10); // Input'tan değeri oku ve sayıya çevir
+                connection.invoke("GenerateStream", seedPhrase, length).catch(function (err) {
+                    return console.error(err.toString());
+                });
+            });
+
+            // Bağlantıyı başlat
+            async function start() {
+                try {
+                    await connection.start();
+                    console.log("SignalR Connected.");
+                    generateButton.disabled = false;
+                } catch (err) {
+                    console.log(err);
+                    setTimeout(start, 5000);
+                }
+            };
+
+            connection.onclose(start);
+
+            // İlk bağlantıyı başlat
+            start();
+        });
+    </script>
+}
