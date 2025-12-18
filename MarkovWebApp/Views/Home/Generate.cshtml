@@ -10,7 +10,6 @@
 
 <div class="row mt-4">
     <div class="col-md-8 offset-md-2">
-        @* Formu artık bir ID ile tanımlıyoruz, post etmesini engelleyeceğiz *@
         <form id="generateForm">
             <div class="form-group">
                 <label for="seedPhraseInput" class="form-label"><h3>Starting Phrase</h3></label>
@@ -42,14 +41,12 @@
 
         <div class="mt-5">
             <h3>Generated Story:</h3>
-            @* Sonucun gösterileceği alanı bir ID ile tanımlıyoruz *@
             <div id="storyResult" class="p-4 bg-light border rounded" style="white-space: pre-wrap; min-height: 150px; font-family: 'Courier New', Courier, monospace;"></div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @* SignalR client kütüphanesini ekliyoruz *@
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -64,23 +61,17 @@
             const lengthInput = document.getElementById("lengthInput");
             const lengthValue = document.getElementById("lengthValue");
 
-            // Slider her hareket ettiğinde, yandaki sayı göstergesini güncelle.
             lengthInput.addEventListener('input', (event) => {
                 lengthValue.textContent = event.target.value;
             });
-
-            // Hub'dan "ReceiveWord" mesajı geldiğinde çalışacak fonksiyon
             connection.on("ReceiveWord", function (word) {
                 storyResultDiv.textContent += word;
             });
 
-            // Hub, akışın bittiğini söylediğinde çalışacak fonksiyon
             connection.on("StreamFinished", function () {
                 generateButton.disabled = false;
                 generateButton.textContent = "Generate Story";
             });
-
-            // Butona tıklandığında formun post edilmesini engelle ve Hub'ı çağır
             document.getElementById("generateForm").addEventListener("submit", function (event) {
                 event.preventDefault();
                 const seedPhrase = seedPhraseInput.value;
@@ -91,17 +82,16 @@
                 }
 
                 errorSpan.textContent = "";
-                storyResultDiv.textContent = ""; // Önceki sonucu temizle
+                storyResultDiv.textContent = "";
                 generateButton.disabled = true;
                 generateButton.textContent = "Generating...";
 
-                const length = parseInt(lengthInput.value, 10); // Input'tan değeri oku ve sayıya çevir
+                const length = parseInt(lengthInput.value, 10);
                 connection.invoke("GenerateStream", seedPhrase, length).catch(function (err) {
                     return console.error(err.toString());
                 });
             });
 
-            // Bağlantıyı başlat
             async function start() {
                 try {
                     await connection.start();
@@ -115,7 +105,6 @@
 
             connection.onclose(start);
 
-            // İlk bağlantıyı başlat
             start();
         });
     </script>

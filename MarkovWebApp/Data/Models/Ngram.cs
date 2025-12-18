@@ -6,10 +6,10 @@ namespace MarkovWebApp.Data.Models
 {
     public class Ngram
     {
-        [Key] // Bu alanın birincil anahtar (Primary Key) olduğunu belirtir
+        [Key]
         public int Id { get; set; }
 
-        [Required] // Bu alanın boş olamayacağını belirtir
+        [Required]
         public string Key { get; set; } = null!;
 
         [Required]

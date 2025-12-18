@@ -20,7 +20,6 @@ namespace MarkovWebApp.Logic
         {
             var words = seedPhrase.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
 
-            // Başlangıç kelimelerini yield et
             foreach (var word in words)
             {
                 yield return word;
@@ -30,7 +29,6 @@ namespace MarkovWebApp.Logic
             {
                 string? nextWord = null;
 
-                // KATZ'S BACK-OFF STRATEJİSİ
                 for (int order = maxOrder; order >= 1; order--)
                 {
                     if (words.Count < order) continue;
@@ -42,25 +40,21 @@ namespace MarkovWebApp.Logic
 
                     if (possibilities.Any())
                     {
-                        // Olasılıkları bulduk, ağırlıklı seçim yap ve döngüden çık
                         nextWord = WeightedRandomSelect(possibilities);
                         break;
                     }
-                    // Sonuç yoksa, bir alt dereceye (daha kısa anahtara) düş ve tekrar dene (back-off)
                 }
 
                 if (string.IsNullOrEmpty(nextWord))
                 {
-                    // Zincir tamamen koptu, daha fazla üretemiyoruz
                     break;
                 }
 
                 words.Add(nextWord);
-                yield return nextWord; // Kelimeyi anında akıt (SignalR için hazırlık)
+                yield return nextWord;
             }
         }
 
-        // Ağırlıklı rastgele seçim metodu
         private string? WeightedRandomSelect(List<Ngram> possibilities)
         {
             if (possibilities == null || !possibilities.Any())
@@ -70,8 +64,6 @@ namespace MarkovWebApp.Logic
 
             int totalWeight = possibilities.Sum(p => p.Count);
 
-            // SAVUNMA HATTI: Eğer toplam ağırlık pozitif değilse,
-            // çekiliş yapmak anlamsız ve tehlikelidir. Sadece rastgele birini seç ve devam et.
             if (totalWeight <= 0)
             {
                 return possibilities[_random.Next(possibilities.Count)].NextWord;
@@ -89,7 +81,7 @@ namespace MarkovWebApp.Logic
                 }
             }
 
-            return null; // Normalde buraya asla ulaşmamalı, ama bir sigorta olarak kalmalı.
+            return null;
         }
 
     }

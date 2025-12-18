@@ -47,12 +47,9 @@
         const progressBar = document.getElementById("progressBar");
         const resultMessage = document.getElementById("resultMessage");
 
-        // Çok kaba bir performans metriği: Saniyede işlenen kelime sayısı
         const WORDS_PER_SECOND = 22.5;
         let estimatedSeconds = 0;
         let progressInterval;
-
-        // Metin kutusu her değiştiğinde süreyi yeniden hesapla
         inputText.addEventListener('input', () => {
             const wordCount = (inputText.value.match(/\S+/g) || []).length;
             if (wordCount > 0) {
@@ -63,18 +60,14 @@
             }
         });
 
-        // Form gönderildiğinde
         trainForm.addEventListener('submit', function(event) {
-            event.preventDefault(); // Formun normal şekilde gönderilmesini engelle
-
-            // Buton ve ilerleme çubuğunu ayarla
+            event.preventDefault();
             trainButton.classList.add("d-none");
             progressContainer.classList.remove("d-none");
             resultMessage.classList.add("d-none");
 
             let timeLeft = estimatedSeconds;
             
-            // Simüle edilmiş ilerleme sayacını başlat
             progressInterval = setInterval(() => {
                 timeLeft--;
                 const progressPercent = Math.min(99, ((estimatedSeconds - timeLeft) / estimatedSeconds) * 100);
@@ -82,7 +75,6 @@
                 progressText.textContent = `Processing... Estimated time remaining: ${Math.max(0, timeLeft)}s`;
             }, 1000);
 
-            // Gerçek backend isteğini gönder
             const formData = new FormData(trainForm);
             fetch(trainForm.action, {
                 method: 'POST',
@@ -92,7 +84,6 @@
                 if (!response.ok) {
                    throw new Error("Server responded with an error.");
                 }
-                // Yanıt başarılı ama içeriğiyle ilgilenmiyoruz, sadece bittiğini bilmek istiyoruz.
                 return response;
             })
             .then(data => {
@@ -103,12 +94,9 @@
                 showResult("An error occurred during training. Please try again.", "alert-danger");
             })
             .finally(() => {
-                // Her durumda (başarı veya hata) ilerleme çubuğunu durdur ve temizle
                 clearInterval(progressInterval);
                 progressBar.style.width = '100%';
                 progressText.textContent = "Finalizing...";
-
-                // Kısa bir gecikmeyle arayüzü sıfırla
                 setTimeout(() => {
                     trainButton.classList.remove("d-none");
                     progressContainer.classList.add("d-none");
@@ -119,7 +107,7 @@
 
         function showResult(message, alertClass) {
             resultMessage.textContent = message;
-            resultMessage.className = `alert ${alertClass} mt-4`; // Mevcut sınıfları temizle
+            resultMessage.className = `alert ${alertClass} mt-4`;
         }
     });
 </script>
