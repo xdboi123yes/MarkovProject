@@ -43,8 +43,7 @@ Kullanıcı deneyimini statik web sayfalarının ötesine taşımak için **Sign
 -   **Frontend:** Razor Pages, JavaScript, Bootstrap 5
 -   **Core Algoritma:** N-gram tabanlı Markov Zinciri
 
-\<details\>
-\<summary\>\<b\>Kurulum ve Çalıştırma Detayları\</b\>\</summary\>
+## Kurulum ve Çalıştırma Detayları
 
 Bu projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyin.
 
